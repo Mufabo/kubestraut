@@ -1,0 +1,10 @@
+$schema: https://api.gitbook.com/gitbook-docs.yaml
+site:
+  title: "Kubestronaut: a hands-on textbook"
+  structure:
+    - type: space
+      key: kubestronaut
+      title: Kubestronaut
+      path: kubestronaut
+      content:
+        directory: ./
