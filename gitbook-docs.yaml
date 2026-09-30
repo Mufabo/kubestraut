@@ -6,5 +6,6 @@ site:
       key: kubestronaut
       title: Kubestronaut
       path: kubestronaut
+      default: true
       content:
         directory: ./
