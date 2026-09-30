@@ -13,15 +13,16 @@ A hands-on textbook covering everything needed for the five certifications that 
 ---
 
 ## 1. Guiding principles
-
-1. **Teach by topic, tag by exam.** The five exams overlap heavily. Chapters are organized by subject; each chapter declares which exams it serves.
-2. **Every lab is disposable.** A reader can break anything and be back at the starting state in under a minute.
-3. **Every lab is verifiable.** Each task has an automated check, so readers get instant PASS/FAIL feedback.
-4. **Every lab is tested in CI.** If the reference solution does not pass `verify.sh` in CI, the chapter does not merge.
-5. **Speed matters.** The performance-based exams are timed. Labs teach imperative `kubectl`, docs navigation, and time budgeting from Part I onward, not just in the exam-prep part.
-6. **One version pin.** The Kubernetes version and all tool versions live in a single `versions.env`.
-
----
+1. **Teach by topic, tag by exam.** Organize by subject; tag each chapter by the exams it serves.
+2. **Every lab is disposable.** A reader can break anything and reset it quickly.
+3. **Every lab is verifiable.** Tasks have automated PASS/FAIL checks.
+4. **Every lab is tested in CI.** Reference solutions must pass verification before merge.
+5. **Speed matters from the beginning.** Imperative kubectl, documentation navigation, and time budgeting are practiced throughout.
+6. **Safety is part of the lab contract.** Destructive actions require verification of the intended disposable environment; author overrides are explicit and non-default.
+7. **Cluster-scoped changes are explicit.** Labs declare ownership and cleanup for CRDs, ClusterRoles, PVs, StorageClasses, node labels/taints, and similar resources.
+8. **Prefer reusable checks.** Common assertions should become declarative/machine-readable where practical; custom verify scripts remain for behavioral checks.
+9. **One version pin, plus curriculum metadata.** Tool/Kubernetes versions live in versions.env; curriculum revision/date is tracked separately.
+10. **Treat schedule estimates as hypotheses.** Progress is measured by tested slices and release gates, not chapter count.
 
 ## 2. Repository layout
 
@@ -63,28 +64,30 @@ kubestronaut-book/
 ---
 
 ## 3. Lab infrastructure
-
 | Tier | Environment | Used for | Reset method |
 |---|---|---|---|
-| 1 | kind / k3d (multi-node) on the reader's machine | ~70% of chapters: workloads, config, services, storage, RBAC, scheduling | Delete namespace, or delete and recreate the cluster |
-| 2 | Multi-VM kubeadm cluster (**Vagrant**, decided) | Cluster install, upgrades, etcd backup/restore, node troubleshooting, most of CKS (AppArmor, seccomp, Falco, kernel-level work) | Restore VM snapshot |
-| 3 | Devcontainer / Codespaces / Killercoda scenarios | Readers without capable hardware | Rebuild container / restart scenario |
+| 1 | kind / k3d (multi-node) | Most workloads, config, services, storage, RBAC, scheduling | Namespace delete or cluster recreation |
+| 2 | Multi-VM Linux kubeadm cluster | Cluster install, upgrades, etcd backup/restore, node troubleshooting, most CKS | VM snapshot / rebuild |
+| 3 | **Canonical hosted implementation:** one documented devcontainer/Codespaces-compatible environment | Hosted fallback for readers without capable hardware | Rebuild/restart scenario |
 
-**Reset contract** (identical in every chapter):
+Tier 2 is an implementation detail, not a curriculum requirement. Vagrant may be used, but should be validated by a proof of concept before becoming the supported path.
 
-| Script | Behavior |
-|---|---|
-| `setup.sh` | Idempotent. Creates the exact starting state. Safe to run repeatedly. |
-| `reset.sh` | Tears down chapter resources and re-runs `setup.sh`. |
-| `verify.sh` | Runs one check per task; prints `PASS`/`FAIL` with a hint; exits non-zero on any failure. |
-| `solve.sh` | Automated reference solution; CI applies it to prove `verify.sh` can pass. |
-| `solutions.md` | Step-by-step solutions, one per task, in a separate file. |
+**Tier 2 POC:** validate cluster creation, node failure/recovery, upgrade, etcd backup/restore, and snapshot/rebuild on a supported host before scaling to all Tier 2 chapters.
 
-Each lab runs in its own namespace (Tier 1) or snapshot (Tier 2) so that chapters never interfere with each other.
+**Reset contract:** setup is idempotent; reset restores the starting state; verify is read-only and reports PASS/FAIL; solve is the CI reference solution; solutions.md contains human-readable solutions.
 
-**Hardware requirements to state in Chapter 3:** Tier 1 needs roughly 4 GB RAM free; Tier 2 needs roughly 8 to 16 GB. Point everyone else to Tier 3.
+**Lab safety contract:**
+- Never silently mutate the user's current kubeconfig namespace/context; prefer explicit context and namespace arguments.
+- Verify actual disposable cluster identity before destructive operations, not merely a context name.
+- Delete only namespaces/resources owned by the lab.
+- Cluster-scoped resources require an ownership/cleanup registry.
+- `LAB_ALLOW_ANY_CONTEXT=1` is an explicit unsafe author/debug override.
 
----
+**Lab quality loop:** setup → untouched verify-fail → solve → verify-pass → deliberately break → reset → verify-fail again → repeat. Include an unrelated sentinel resource in the test harness.
+
+**Lab taxonomy:** tag tasks as CREATE, CONFIGURE, DEBUG, RECOVER, IMPLEMENT, SECURE, INVESTIGATE, or OPTIMIZE.
+
+**Hardware:** state minimums in Chapter 3; point unsupported hardware to Tier 3.
 
 ## 4. Chapter template
 
@@ -100,18 +103,18 @@ Every chapter follows this structure:
 8. **Further reading**
 
 ### Chapter definition of done
-
-- [ ] Text reviewed against the current curriculum bullets it claims to cover
-- [ ] All commands executed on the pinned Kubernetes version
-- [ ] `setup.sh`, `reset.sh`, `verify.sh` implemented and idempotent
-- [ ] CI run: setup, apply reference solution, `verify.sh` passes
-- [ ] CI run: `verify.sh` fails on the untouched starting state (proves the checks are real)
-- [ ] `reset.sh` verified after a deliberately broken lab
-- [ ] Questions written, each with an explanation of the correct answer
+- [ ] Text reviewed against current curriculum bullets
+- [ ] Commands executed on the pinned Kubernetes version
+- [ ] setup/reset/verify implemented and idempotent
+- [ ] verify is read-only and refuses unexpected cluster identity
+- [ ] Cluster-scoped resources have explicit ownership/cleanup
+- [ ] CI proves reference solution passes
+- [ ] CI proves untouched verification fails
+- [ ] CI proves verification leaves an unrelated sentinel unchanged
+- [ ] Reset works after deliberate breakage and repeat cycles are deterministic
+- [ ] Questions and explanations written
 - [ ] Coverage matrix updated
-- [ ] Read by one person at the target level who was not the author
-
----
+- [ ] Reviewed by a target-level reader who was not the author
 
 ## 5. Chapter plan
 
@@ -189,81 +192,96 @@ Command cheat sheet · YAML snippets · JSONPath reference · glossary · soluti
 ---
 
 ## 6. Coverage matrix
-
-Maintain `docs/coverage-matrix.md` as a table with one row per curriculum bullet:
-
-| Exam | Domain | Bullet (verbatim from curriculum) | Chapter | Lab task | Question IDs | Status |
-|---|---|---|---|---|---|---|
-
-This is the proof of "covers all materials." Review it at the end of every phase and before every release.
-
----
+Maintain `docs/coverage-matrix.md` with one row per curriculum bullet:
+| Exam | Curriculum revision/date | Domain | Bullet | Chapter | Lab task | Task type | Question IDs | Status |
+|---|---|---|---|---|---|---|---|---|
+Review it at every phase and release. No bullet should silently disappear during reorganization; conceptual-only material must have an explicit status. Review Chapters 21, 24, and 31 for overloaded skill loops and split their lab scenarios without gratuitous chapter renumbering.
 
 ## 7. Phases and milestones
+Estimates are planning hypotheses; phases exit on release gates, not chapter counts.
 
-Estimates assume one author working part-time; adjust for your pace and any co-authors.
+### Phase 0: ENGINE — lab contract and pilot (2–3 weeks)
+- [ ] CI, question schema validation, coverage metadata
+- [ ] Disposable-cluster identity and explicit-context safety
+- [ ] Cluster-scoped cleanup contract
+- [ ] Chapter 04 reaches the full definition of done
+- **Gate:** a stranger can run, verify-fail, solve, break, reset, and repeat without affecting a sentinel or non-lab context.
 
-### Phase 0: Foundations (2 to 3 weeks)
-*Status: scaffold, docs, tooling, CI, and the pilot chapter (04) are drafted. Remaining: run the pilot against a real kind cluster and fix what breaks.*
+### Phase 1A: CORE — Foundations
+- [ ] Chapters 01–06
+- [ ] Timed drills, docs navigation, imperative-command practice
+- [ ] First external testers
+- **Release:** v0.1 Foundations.
 
-- [ ] Style guide, chapter template, lab-authoring guide
-- [ ] Repo skeleton, `versions.env`, Makefile targets (`lab`, `reset`, `verify`, `solve`)
-- [ ] Shared shell library (`tools/lib.sh`) with assertion and wait helpers
-- [ ] CI pipeline: markdown lint, shellcheck, yamllint, kind-based lab runner
-- [ ] Question-bank format and renderer
-- [ ] Coverage matrix populated from all five current curricula (empty status)
-- [ ] **Pilot chapter (Ch. 04) finished to the full definition of done**
-- **Exit criterion:** a stranger can clone the repo, run `make lab CH=04`, complete the lab, break it, and `make reset CH=04`.
+### Phase 1B: APPLICATIONS — Chapters 07–16
+- [ ] Chapters 07–16
+- [ ] Canonical Tier 3 implementation
+- [ ] Reusable declarative lab checks
+- [ ] External CKAD-oriented beta slice
+- **Release:** v0.2 Applications.
 
-### Phase 1: Parts I and II (~8 weeks)
-*Status: Chapters 01 and 02 drafted (Ch02 lab has a read-only cluster tour with computed expected answers). Neither has been run on a real cluster yet. Chapter 03 is planned; decisions recorded: lab combines a shared seeded set of Pods, fresh per-task scenarios, and guided drills with a timed final task, and includes the full shell/exam setup (aliases, completion, vim).*
-- [ ] Chapters 01 to 16 drafted, tested, reviewed
-- [ ] Tier 3 devcontainer working
-- **Exit criterion:** all Tier 1 labs pass the CI loop; coverage matrix shows KCNA and CKAD material complete.
+### Phase 2: ADMIN — Tier 2 POC, then Chapters 17–28
+- [ ] Tier 2 POC first
+- [ ] Supported host/provider matrix
+- [ ] Chapters 17–28 with real troubleshooting/recovery tasks
+- **Release:** v0.3 Administration.
 
-### Phase 2: Part III (~8 weeks)
-- [ ] Tier 2 environment built first: Vagrant config, base-image build, snapshot-based reset
-- [ ] Chapters 17 to 28
-- **Exit criterion:** a full kubeadm cluster can be rebuilt from scratch, upgraded, and restored from an etcd backup by following the book alone.
+### Phase 3: SECURITY — Chapters 29–36
+- [ ] Pin/test security tooling
+- [ ] Teach concepts/workflows, not vendor commands alone
+- [ ] Document supported host-dependent environment
+- **Release:** v0.4 Security.
 
-### Phase 3: Part IV (~8 weeks)
-- [ ] Chapters 29 to 36; pin and test Trivy, Falco, kube-bench, Kyverno/Gatekeeper versions
-- **Exit criterion:** every CKS and KCSA bullet in the coverage matrix is mapped and tested.
+### Phase 4: EXAM SYSTEM — Chapters 37–39 and mocks
+- [ ] Chapters 37–39
+- [ ] Five mock exams and timing data
+- [ ] `make exam`: timed, no learner hints, explicit PASS/FAIL, same lab contract
+- [ ] Docs-navigation and terminal-speed drills are synthesized here, not introduced here
+- **Release:** v0.5 Full Coverage.
 
-### Phase 4: Part V and mock exams (~4 weeks)
-- [ ] Chapters 37 to 39
-- [ ] Five mock exams; time-test each yourself and record how long it took
-- **Exit criterion:** mock exams reflect exam format and difficulty, and a beta reader finishes a mock within the allotted time on a first attempt only after studying the book.
+### Phase 5: VALIDATION — beta and release
+- [ ] 3–5 beta readers
+- [ ] Supported Linux/macOS/Windows-WSL paths tested
+- [ ] Full curriculum/Kubernetes/tool re-verification
+- [ ] Errata and release checklist
+- **Release:** v1.0 after metrics below.
 
-### Phase 5: Beta and release (4+ weeks)
-- [ ] Recruit 3 to 5 beta readers at the target level
-- [ ] Collect stuck-points per chapter; fix environment bugs first, prose second
-- [ ] Full re-verification against current curricula and Kubernetes version
-- [ ] Release v1.0; publish errata process
+### Success metrics
+- 100% of included labs pass the full setup/verify/solve/break/reset loop.
+- 100% of included curriculum bullets are mapped with explicit conceptual status where applicable.
+- All verify scripts are read-only.
+- Advertised platform matrix is actually tested.
+- No broken internal links and clean-checkout prerequisites work.
+- External learner blockers are tracked and fixed.
+- Each release records curriculum revision/date and Kubernetes/tool versions.
 
-**Total:** roughly 8 to 10 months part-time. Labs and environments take more effort than the prose.
-
----
+**Planning note:** retain the original 8–10 month figure only as a rough envelope; do not defer external validation until all 39 chapters exist.
 
 ## 8. Risks and mitigations
-
 | Risk | Mitigation |
 |---|---|
-| Curriculum or Kubernetes version changes mid-project | Single `versions.env`; coverage matrix; CI re-runs all labs on a version bump |
-| Lab scripts rot over time | Every lab in CI; scheduled weekly CI run against pinned and latest versions |
-| Tier 2 hardware requirements exclude readers | Tier 3 hosted option; document minimum specs clearly |
-| Labs work on the author's machine only | Beta readers on Linux, macOS, and Windows (WSL2); CI on Linux |
-| Security tooling (Falco, Trivy) changes quickly | Pin versions; isolate tool setup in per-chapter `setup.sh` |
-| Scope creep (topics beyond the exams) | Every section must map to a coverage-matrix row, or go in "Further reading" |
-| Copying exam content | Write original questions and scenarios from the public curricula only; never reproduce real exam questions |
-
----
+| Curriculum/Kubernetes changes | versions.env + curriculum revision metadata + CI |
+| Destructive lab targets a real cluster | Actual cluster identity check + explicit contexts + safe refusal |
+| Cluster-scoped resources leak | Ownership/cleanup registry |
+| Tier 2 is brittle/host-specific | Early POC and documented support matrix |
+| Tier 3 fragments into competing implementations | One canonical hosted implementation first |
+| Lab scripts rot | CI plus scheduled runs |
+| Security tools change | Pin versions; teach workflows/concepts |
+| Author-only success | External testers on supported platforms |
+| Scope creep | Coverage-matrix mapping or Further reading |
+| Overloaded chapters | Split lab scenarios before renumbering |
+| Exam-content copying | Original questions/scenarios from public curricula only |
 
 ## 9. Immediate next steps
 
-1. ~~Decide the Tier 2 tool~~ Decided: **Vagrant**. (Note: Vagrant needs a provider such as VirtualBox or libvirt; the setup guide must say which are supported per OS. Apple Silicon Macs are the awkward case.)
-2. Write `docs/chapter-template.md` and `docs/lab-authoring.md`.
-3. Build the Makefile and `tools/lib.sh`.
-4. Write the pilot chapter (04: Pods) end to end.
-5. Set up CI and make the pilot chapter pass the setup, solve, verify loop.
-6. Run the Pods lab on a real kind cluster (`make cluster && make test CH=4`), then fix whatever breaks. The stub-`kubectl` test only proves the script logic.
+1. Finish lab safety: disposable-cluster identity, no kubeconfig namespace mutation, read-only verification, cluster-scoped cleanup.
+2. Run Chapter 04 against a real kind cluster through the full test loop.
+3. Add `make doctor` for prerequisites, versions, runtime, cluster state, and context safety.
+4. Harden the test harness with a sentinel, deterministic repeat cycles, and useful debug output.
+5. Deliver Foundations (01–06), then Applications (07–16); start external testing before all 16 exist.
+6. Prototype Tier 2 before most administration chapters.
+7. Choose and document the canonical Tier 3 implementation.
+8. Introduce timed mode and docs-navigation drills before Part V.
+9. Populate the coverage matrix from the current five curricula with revision/date.
+10. Add tests for chapter discovery, path resolution, question validation, version parsing, and context validation.
+11. Use release gates for v0.1, v0.2, v0.3, v0.4, v0.5, and v1.0.
