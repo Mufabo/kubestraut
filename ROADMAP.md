@@ -8,6 +8,7 @@ A hands-on textbook covering everything needed for the five certifications that 
 - **Assessment:** end-of-chapter questions in every chapter, plus a mock exam per certification.
 
 > **Before locking the outline:** verify each certification's current curriculum (domains, weights, Kubernetes version) on the CNCF/Linux Foundation curriculum repos. Update `docs/coverage-matrix.md` (see §6) whenever they change.
+> **Already checked:** KCNA now has four domains (44/28/16/12) and CKA has five (25/15/20/10/30), per the official `cncf/curriculum` READMEs. The bullet-level PDFs still need to be transcribed into the coverage matrix.
 
 ---
 
@@ -44,7 +45,7 @@ kubestronaut-book/
 │   └── devcontainer/            # Tier 3 Codespaces / hosted option
 ├── chapters/
 │   └── 07-configmaps-secrets/
-│       ├── README.md            # the chapter text
+│       ├── 07-configmaps-secrets.md  # the chapter text (named after the chapter)
 │       ├── questions.yaml       # end-of-chapter question bank
 │       ├── manifests/           # starter YAML for the reader
 │       └── lab/
@@ -215,6 +216,7 @@ Estimates assume one author working part-time; adjust for your pace and any co-a
 - **Exit criterion:** a stranger can clone the repo, run `make lab CH=04`, complete the lab, break it, and `make reset CH=04`.
 
 ### Phase 1: Parts I and II (~8 weeks)
+*Status: Chapters 01 and 02 drafted (Ch02 lab has a read-only cluster tour with computed expected answers). Neither has been run on a real cluster yet. Chapter 03 is planned; decisions recorded: lab combines a shared seeded set of Pods, fresh per-task scenarios, and guided drills with a timed final task, and includes the full shell/exam setup (aliases, completion, vim).*
 - [ ] Chapters 01 to 16 drafted, tested, reviewed
 - [ ] Tier 3 devcontainer working
 - **Exit criterion:** all Tier 1 labs pass the CI loop; coverage matrix shows KCNA and CKAD material complete.

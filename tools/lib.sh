@@ -79,6 +79,69 @@ lab_create_ns() {
   info "Namespace ${ns} created and set as the current context default"
 }
 
+# ---- kubeconfig save/restore helpers ---------------------------------------
+# Labs that switch context or namespace must leave the reader's environment as
+# they found it. Setup saves the original; teardown restores it.
+#
+#   lab_save_kubectx    "${here}/.state/kubectx"     (in setup.sh)
+#   lab_restore_kubectx "${here}/.state/kubectx"     (in teardown.sh / reset.sh)
+#   lab_delete_contexts ch03-a ch03-b                (contexts a lab created)
+
+# kubectx_exists <name>
+kubectx_exists() {
+  local n
+  while IFS= read -r n; do
+    [[ "$n" == "$1" ]] && return 0
+  done < <(kubectl config get-contexts -o name 2>/dev/null)
+  return 1
+}
+
+# lab_save_kubectx <state-file>
+# Records the current context and its default namespace. If the file already
+# exists it is left alone, so repeated setups keep the reader's ORIGINAL
+# settings rather than ones a previous run of the lab had changed.
+lab_save_kubectx() {
+  local f=$1 ctx ns
+  [[ -f "$f" ]] && return 0
+  ctx="$(kubectl config current-context 2>/dev/null)" || return 0
+  ns="$(kubectl config view --minify --output 'jsonpath={..namespace}' 2>/dev/null || true)"
+  mkdir -p "$(dirname "$f")"
+  printf 'ctx=%s\nns=%s\n' "$ctx" "$ns" > "$f"
+}
+
+# lab_restore_kubectx <state-file>
+# Switches back to the saved context and puts back its default namespace
+# (or removes the namespace setting if there was none). Deletes the state file
+# so the next setup saves fresh. Does nothing if nothing was saved.
+lab_restore_kubectx() {
+  local f=$1 ctx ns
+  [[ -f "$f" ]] || return 0
+  ctx="$(sed -n 's/^ctx=//p' "$f")"
+  ns="$(sed -n 's/^ns=//p' "$f")"
+  if [[ -n "$ctx" ]] && kubectx_exists "$ctx"; then
+    kubectl config use-context "$ctx" >/dev/null
+    if [[ -n "$ns" ]]; then
+      kubectl config set-context "$ctx" --namespace="$ns" >/dev/null
+    else
+      kubectl config unset "contexts.${ctx}.namespace" >/dev/null 2>&1 || true
+    fi
+    info "Restored context ${ctx}${ns:+ and namespace ${ns}}"
+  else
+    warn "saved context '${ctx}' no longer exists; leaving the current context unchanged"
+  fi
+  rm -f "$f"
+}
+
+# lab_delete_contexts <name>...   (missing contexts are ignored)
+lab_delete_contexts() {
+  local n
+  for n in "$@"; do
+    if kubectx_exists "$n"; then
+      kubectl config delete-context "$n" >/dev/null
+    fi
+  done
+}
+
 # ---- check framework (used by verify.sh) ------------------------------------
 CHECKS_PASSED=0
 CHECKS_FAILED=0

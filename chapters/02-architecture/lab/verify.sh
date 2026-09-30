@@ -32,8 +32,11 @@ t4() {
   answer_is "$F_NODE" "$(kubectl -n "$LAB_NS" get pod where-am-i -o jsonpath='{.spec.nodeName}')"
 }
 t5() {
-  [[ -f "$F_API" ]] && [[ "$(norm_token "$F_API")" == "apps/v1" ]] &&
-  kubectl api-resources --api-group=apps -o name | grep -qx 'deployments.apps'
+  # Not norm_token: it would strip the "apps/" prefix that is part of the answer.
+  local served
+  [[ -f "$F_API" ]] && [[ "$(tr -d '[:space:]' < "$F_API")" == "apps/v1" ]] &&
+  served="$(kubectl api-resources --api-group=apps -o name)" &&
+  grep -qx 'deployments.apps' <<<"$served"
 }
 
 check 1 "the control plane node's name is saved in ${F_CP}" \

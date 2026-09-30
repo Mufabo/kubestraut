@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Render chapters/<NN-name>/questions.yaml into that chapter's README.md.
+"""Render chapters/<NN-name>/questions.yaml into the chapter file
+chapters/<NN-name>/<NN-name>.md (the chapter file is named after its directory).
 
-The README must contain the markers:
+The chapter file must contain the markers:
     <!-- QUESTIONS:START -->
     <!-- QUESTIONS:END -->
 Everything between them is replaced. Run with --check in CI to fail if the
-committed README is out of date.
+committed chapter file is out of date.
 
 Question schema (questions.yaml is a list):
   - id: q01
@@ -52,9 +53,12 @@ def render(questions):
 
 def process(chapter_dir, check):
     qfile = chapter_dir / "questions.yaml"
-    readme = chapter_dir / "README.md"
+    readme = chapter_dir / f"{chapter_dir.name}.md"
     if not qfile.exists():
         return True
+    if not readme.exists():
+        print(f"{qfile} exists but {readme} is missing", file=sys.stderr)
+        return False
     text = readme.read_text()
     if START not in text or END not in text:
         print(f"{readme}: missing question markers", file=sys.stderr)

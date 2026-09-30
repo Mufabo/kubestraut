@@ -265,6 +265,149 @@ There are no automated checks for this exercise. Compare your answers with a stu
 - "Microservices are always better than monoliths." They trade simplicity for flexibility.
 
 <!-- QUESTIONS:START -->
+
+## End-of-chapter questions
+
+**1.** `KCNA` Which internal Google system most directly influenced the design of Kubernetes?
+
+- **A.** Spanner
+- **B.** Borg
+- **C.** MapReduce
+- **D.** Bigtable
+
+**2.** `KCNA` Which organization hosts Kubernetes and is part of the Linux Foundation?
+
+- **A.** The Apache Software Foundation
+- **B.** The Open Container Initiative
+- **C.** The Cloud Native Computing Foundation
+- **D.** The Eclipse Foundation
+
+**3.** `KCNA` Which of the following is NOT a CNCF project maturity level?
+
+- **A.** Sandbox
+- **B.** Incubating
+- **C.** Graduated
+- **D.** Certified
+
+**4.** `KCNA` Which standard defines how the kubelet communicates with a container runtime?
+
+- **A.** CNI
+- **B.** CSI
+- **C.** CRI
+- **D.** OCI
+
+**5.** `KCNA` Why can an image built with Docker run under containerd or CRI-O without modification?
+
+- **A.** Kubernetes converts Docker images at deploy time
+- **B.** The runtimes embed the Docker daemon
+- **C.** Images follow the OCI image specification
+- **D.** Docker images are always stored as VM disks
+
+**6.** `KCNA` Which statement best describes a container compared with a virtual machine?
+
+- **A.** A container includes its own kernel
+- **B.** A container shares the host kernel and isolates processes
+- **C.** A container requires a hypervisor
+- **D.** A container always runs a full guest OS
+
+**7.** `KCNA` In the twelve-factor methodology, where should configuration that varies between deployments be kept?
+
+- **A.** Hard-coded in the source code
+- **B.** In the environment, separate from code
+- **C.** Inside the container image at build time
+- **D.** In a comment in the Dockerfile
+
+**8.** `KCNA` What does 'immutable infrastructure' mean in practice?
+
+- **A.** Servers are never restarted
+- **B.** You replace components with new versions instead of modifying them in place
+- **C.** All configuration files are read-only for administrators
+- **D.** Containers cannot hold any data
+
+**9.** `KCNA` What is the key difference between declarative and imperative management?
+
+- **A.** Declarative describes the desired end state; imperative issues a sequence of commands
+- **B.** Declarative requires YAML; imperative requires JSON
+- **C.** Declarative is slower but safer than imperative in all cases
+- **D.** Imperative systems continuously reconcile; declarative systems run once
+
+**10.** `KCNA` Which CNCF project is primarily used for collecting metrics and alerting?
+
+- **A.** Helm
+- **B.** Prometheus
+- **C.** etcd
+- **D.** CoreDNS
+
+**11.** `KCNA` Which of these is a service mesh project?
+
+- **A.** Helm
+- **B.** etcd
+- **C.** Istio
+- **D.** CoreDNS
+
+**12.** `KCNA` What is a Kubernetes SIG?
+
+- **A.** A cloud provider certification level
+- **B.** A special interest group that owns an area of the project, such as networking or storage
+- **C.** A security incident report
+- **D.** A signed container image
+
+**13.** `KCNA` What is a KEP?
+
+- **A.** A Kubernetes Enhancement Proposal, the design document for a significant change
+- **B.** A kubelet execution policy
+- **C.** A key exchange protocol for etcd
+- **D.** A Kubernetes exam prerequisite
+
+**14.** `KCNA` Which statement about alpha features in Kubernetes is correct?
+
+- **A.** They are enabled by default and covered by the deprecation policy
+- **B.** They are disabled by default and may change or be removed without notice
+- **C.** They are always production-ready
+- **D.** They cannot be enabled by feature gates
+
+**15.** `KCNA` Which is a genuine benefit of splitting an application into microservices?
+
+- **A.** It always reduces operational complexity
+- **B.** Each service can be deployed and scaled independently
+- **C.** It removes the need for networking
+- **D.** It guarantees the system never fails
+
+<details>
+<summary>Answers</summary>
+
+**1. B.** Borg, Google's internal cluster manager, and its successor Omega shaped Kubernetes' design. The others are data-processing and storage systems.
+
+**2. C.** Kubernetes was the first project donated to the CNCF. The OCI is a separate body that maintains container specifications, not Kubernetes.
+
+**3. D.** The maturity levels are Sandbox, Incubating, and Graduated. 'Certified' relates to the separate Certified Kubernetes conformance program for distributions and services.
+
+**4. C.** The Container Runtime Interface (CRI) is the kubelet-to-runtime API. CNI covers networking, CSI covers storage, and OCI defines image and runtime specifications.
+
+**5. C.** The OCI image specification standardizes the image format, so any OCI-compliant runtime can run it.
+
+**6. B.** Containers use kernel features (namespaces, cgroups) to isolate processes that share the host kernel. VMs carry a guest OS and run on a hypervisor.
+
+**7. B.** The Config factor says to store config in the environment. In Kubernetes this maps to ConfigMaps, Secrets, and environment variables.
+
+**8. B.** With immutable infrastructure you build and deploy a new image and discard the old one, rather than patching running systems. That avoids configuration drift.
+
+**9. A.** Declarative systems take a description of the end state and reconcile toward it. Imperative approaches spell out the steps. The file format is irrelevant.
+
+**10. B.** Prometheus scrapes time-series metrics and evaluates alerting rules. Helm packages manifests, etcd stores state, and CoreDNS provides cluster DNS.
+
+**11. C.** Istio (and Linkerd) are service meshes. Envoy is often the proxy underneath, but it is a proxy rather than a mesh by itself.
+
+**12. B.** SIGs (Special Interest Groups) own areas of the Kubernetes project, with charters, chairs, and public meetings.
+
+**13. A.** KEPs describe motivation, design, risks, and graduation criteria for significant changes, and are reviewed publicly before implementation.
+
+**14. B.** Alpha features are off by default and can change or disappear. Stable (GA) features are enabled by default and covered by the deprecation policy.
+
+**15. B.** Independent deployment and scaling is the main benefit. The trade-off is added operational complexity in networking, observability, and versioning.
+
+</details>
+
 <!-- QUESTIONS:END -->
 
 ## Further reading

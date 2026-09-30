@@ -28,4 +28,6 @@ jobs:
           node_image: ${{ env.KIND_NODE_IMAGE }}
           cluster_name: ${{ env.CLUSTER_NAME }}
           config: envs/kind/cluster.yaml
+      - name: Unit-test shared helpers
+        run: make test-lib
       - run: make test-tier1

@@ -1,23 +1,30 @@
 # Chapter template
 
 Copy `chapters/04-pods/` as a starting point. Every chapter directory is named
-`NN-short-slug` and contains:
+`NN-short-slug`, and the chapter text is a Markdown file named after the
+directory (`04-pods/04-pods.md`, never `README.md`). A chapter directory contains:
 
 ```text
 NN-slug/
-├── README.md         the chapter text
-├── questions.yaml    end-of-chapter questions (rendered into README.md)
+├── NN-slug.md        the chapter text
+├── questions.yaml    end-of-chapter questions (rendered into NN-slug.md)
 ├── manifests/        starter YAML the reader is expected to use or edit
 └── lab/
-    ├── lab.env       LAB_NS, LAB_TIER, LAB_CONTEXT (optional)
+    ├── lab.env       LAB_NS, LAB_TIER, LAB_CONTEXT, LAB_PARTS (optional ones)
     ├── setup.sh      builds the starting state (idempotent)
     ├── reset.sh      tears down, then runs setup.sh
     ├── verify.sh     one check per task
     ├── solve.sh      automated reference solution (used by CI)
+    ├── teardown.sh   optional: remove lab resources, restore kubectl context
+    ├── parts/        optional: one script per part when LAB_PARTS is set
     └── solutions.md  human-readable solutions and explanations
 ```
 
-## README.md structure
+Concept-only chapters (for example Chapter 01) have no `lab/` or `manifests/`
+folder. They keep `NN-slug.md` and `questions.yaml`, use an exploration exercise
+in place of a lab, and are ignored by `make test-tier1`.
+
+## Chapter file structure
 
 1. `# Chapter NN: Title`
 2. Header block (blockquote): exams served, difficulty, time, lab tier, prerequisites

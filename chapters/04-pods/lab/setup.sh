@@ -23,7 +23,7 @@ sed "s/__CODE__/${code}/" "${here}/../manifests/logger.yaml.tpl" | kubectl -n "$
 
 info "Waiting for the logger pod to start (image pull may take a moment)"
 wait_for "logger pod Running" 180 pod_phase_is "$LAB_NS" logger Running
-wait_for "logger pod printed its code" 60 \
-  bash -c "kubectl -n '$LAB_NS' logs logger 2>/dev/null | grep -q activation-code"
+logger_printed_code() { [[ "$(kubectl -n "$LAB_NS" logs logger 2>/dev/null)" == *activation-code=* ]]; }
+wait_for "logger pod printed its code" 60 logger_printed_code
 
 info "Lab ready. Namespace: ${LAB_NS}. Open the chapter's Hands-on lab section."

@@ -33,7 +33,7 @@ t4() {
 t5() {
   [[ "$(jp once '{.spec.restartPolicy}')" == "Never" ]] &&
   [[ "$(jp once '{.status.phase}')" == "Succeeded" ]] &&
-  kubectl -n "$LAB_NS" logs once | grep -qx "hello"
+  [[ "$(kubectl -n "$LAB_NS" logs once)" == "hello" ]]
 }
 
 check 1 "pod 'web' runs nginx:1.27 with label app=web and containerPort 80" \
