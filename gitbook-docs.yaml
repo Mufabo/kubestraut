@@ -1,22 +1,5 @@
-$schema: https://api.gitbook.com/gitbook-docs.yaml
-
-site:
-  title: Kubestraut
+$schema: https://schemas.gitbook.com/gitbook-docs.json
 
 structure:
-  - type: section
-    key: kubestraut
-    title: Kubestraut
-    path: kubestraut
-    default: true
-
-    children:
-      - type: space
-        key: kubestraut-docs
-        title: Kubestraut
-        path: kubestraut
-        default: true
-
-        content:
-          directory: ./chapters
-          language: en
+  readme: README.md
+  summary: chapters/SUMMARY.md
