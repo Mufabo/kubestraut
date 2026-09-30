@@ -1,5 +1,0 @@
-$schema: https://schemas.gitbook.com/gitbook-docs.json
-
-structure:
-  readme: README.md
-  summary: chapters/SUMMARY.md
