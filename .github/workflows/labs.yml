@@ -1,0 +1,31 @@
+name: labs
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: "0 6 * * 1"   # weekly: catch upstream drift even when nothing changed
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y shellcheck yamllint
+      - run: pip install -r tools/requirements.txt
+      - run: npm install -g markdownlint-cli2
+      - run: make lint
+      - run: make questions-check
+
+  tier1-labs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read pinned versions
+        run: cat versions.env | grep -v '^#' | grep . >> "$GITHUB_ENV"
+      - uses: helm/kind-action@v1
+        with:
+          version: ${{ env.KIND_VERSION }}
+          node_image: ${{ env.KIND_NODE_IMAGE }}
+          cluster_name: ${{ env.CLUSTER_NAME }}
+          config: envs/kind/cluster.yaml
+      - run: make test-tier1
